@@ -1,0 +1,4 @@
+.buildozer
+venv
+bin
+.env
