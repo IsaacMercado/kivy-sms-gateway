@@ -1,1 +1,1 @@
-# kivy-sms-gateway
+# Kivy SMS Gateway

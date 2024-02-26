@@ -1,16 +1,22 @@
 from functools import cached_property
 from typing import Any
 
-from jnius import autoclass
+
+from jnius import autoclass, PythonJavaClass, java_method
 
 
-def get_shared_preferences():
+def get_shared_preferences(name: str | None = None):
     mActivity = autoclass('org.kivy.android.PythonActivity').mActivity
-    context = mActivity.getApplicationContext()
-    return context.getSharedPreferences("MyApp", context.MODE_PRIVATE)
+    Context = autoclass('android.content.Context')
+
+    if name is not None:
+        context = mActivity.getApplicationContext()
+        return context.getSharedPreferences(name, Context.MODE_PRIVATE)
+
+    return mActivity.getPreferences(Context.MODE_PRIVATE)
 
 
-class Editor:
+class Editor(object):
     def __init__(self, editor):
         self.editor = editor
 
@@ -74,9 +80,23 @@ class Editor:
         self.apply()
 
 
-class SharedPreferences:
-    def __init__(self):
-        self.shared_preferences = get_shared_preferences()
+class SharedPreferences(object):
+    class OnSharedPreferenceChangeListener(PythonJavaClass):
+        __javainterfaces__ = [
+            'android/content/SharedPreferences'
+            '$OnSharedPreferenceChangeListener'
+        ]
+
+        def __init__(self, callback, *args, **kwargs):
+            self.callback = callback
+            PythonJavaClass.__init__(self, *args, **kwargs)
+
+        @java_method('(Landroid/content/SharedPreferences;Ljava/lang/String;)V')
+        def onSharedPreferenceChanged(self, sharedPreferences, key):
+            self.callback(SharedPreferences(sharedPreferences), key)
+
+    def __init__(self, shared_preferences=None):
+        self.shared_preferences = shared_preferences or get_shared_preferences()
 
     def set(self, key: str, value: Any):
         with self.edit as editor:
@@ -109,6 +129,18 @@ class SharedPreferences:
 
     def get_string_set(self, key, default_value=None) -> set[str]:
         return self.shared_preferences.getStringSet(key, default_value)
+
+    def register_on_shared_preference_change_listener(self, callback):
+        listener = SharedPreferences.OnSharedPreferenceChangeListener(callback)
+        self.shared_preferences.registerOnSharedPreferenceChangeListener(
+            listener
+        )
+        return listener
+
+    def unregister_on_shared_preference_change_listener(self, listener):
+        self.shared_preferences.unregisterOnSharedPreferenceChangeListener(
+            listener
+        )
 
     def set_all(self, values: dict[str, Any]):
         with self.edit as editor:

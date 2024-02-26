@@ -2,3 +2,5 @@
 venv
 bin
 .env
+*.ini
+__pycache__

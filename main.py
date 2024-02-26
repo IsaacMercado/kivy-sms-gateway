@@ -17,7 +17,6 @@ inotify_logger.setLevel(logging.WARNING)
 
 if platform == 'android':
     from android.permissions import Permission, request_permissions
-    from receiver import ImcomingSmsReceiver
 
 
 class CustomEventHandler(RegexMatchingEventHandler):
@@ -38,9 +37,6 @@ class MyApp(App):
                 Permission.INTERNET,
                 Permission.FOREGROUND_SERVICE,
             ])
-
-            # self.receiver = ImcomingSmsReceiver(self.on_sms_received)
-            # self.receiver.start()
 
             start_service('Myservice', 'Hola mundo')
             # self.run_observer()
