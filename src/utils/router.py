@@ -126,7 +126,7 @@ def route_options(**options):
     return decorator
 
 
-class AppRouter(App):
+class MixinAppRouter:
     route = StringProperty("")
     history = ListProperty([])
     max_history = NumericProperty(20)
@@ -143,6 +143,10 @@ class AppRouter(App):
         self.history.pop(-1)
         if self.history:
             self.route = self.history[-1]
+
+
+class AppRouter(MixinAppRouter, App):
+    pass
 
 
 class Router(RelativeLayout):

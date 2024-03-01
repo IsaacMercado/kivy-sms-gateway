@@ -1,81 +1,95 @@
-# coding=utf-8
 import os
 
+from kivy import platform
 from kivy.app import App
 from kivy.lang import Builder
 from kivy.properties import StringProperty
-from kivy.uix.screenmanager import Screen, ScreenManager, SlideTransition
+from kivy.uix.screenmanager import Screen
+from kivymd.uix.textfield import MDTextFieldRect
 
-from utils.router import AppRouter, Router, route
+from src.utils.router import Router, route, MixinAppRouter
+
+if platform == 'android':
+    from android.permissions import Permission, request_permissions
+
+    from src.services.register import start_service, stop_service
+
+    SERVER_NAME = 'Myservice'
+
 
 Builder.load_string("""
 <MenuScreen>:
-    BoxLayout:
+    MDBoxLayout:
         orientation: 'vertical'
 
-        Label:
+        MDLabel:
             text: "You are now connected"
             font_size: 32
 
-        Button:
+        MDRectangleFlatButton:
+            text: "Hello world"
+            font_size: 24
+            on_press: self.callback()
+
+        MDRectangleFlatButton:
             text: "Disconnect"
             font_size: 24
             on_press: app.route = "/login"
 
 <SettingsScreen>:
-    BoxLayout:
+    MDBoxLayout:
         orientation: "vertical"
 
-        Button:
+        MDRectangleFlatButton:
             text: "Back"
             on_release: app.history_back()
             size_hint_y: None
             height: "48dp"
 
-        Label:
+        MDLabel:
             text: "Settings"
 
 <LoginScreen>:
-    BoxLayout:
+    MDBoxLayout:
         id: login_layout
         orientation: 'vertical'
         padding: [10,50,10,50]
         spacing: 50
 
-        Label:
+        MDLabel:
             text: 'Welcome'
             font_size: 32
 
-        BoxLayout:
+        MDBoxLayout:
             orientation: 'vertical'
 
-            Label:
+            MDLabel:
                 text: 'Login'
                 font_size: 18
                 halign: 'left'
                 text_size: root.width-20, 20
 
-            TextInput:
+            MDTextFieldRect:
                 id: login
                 multiline:False
                 font_size: 28
 
-        BoxLayout:
+        MDBoxLayout:
             orientation: 'vertical'
 
-            Label:
+            MDLabel:
                 text: 'Password'
                 halign: 'left'
                 font_size: 18
                 text_size: root.width-20, 20
 
-            TextInput:
+            MDTextFieldRect:
                 id: password
                 multiline:False
                 password:True
                 font_size: 28
 
-        Button:
+        MDRectangleFlatButton:
             text: 'Connexion'
             font_size: 24
             on_press: root.do_login(login.text, password.text)
@@ -96,7 +110,11 @@ class LoginScreen(Screen):
 
 
 class MenuScreen(Screen):
-    pass
+    def callback(self, instance):
+        print('The button is being pressed!')
+
+        if platform == 'android':
+            stop_service(SERVER_NAME)
 
 
 class SettingsScreen(Screen):
@@ -117,11 +135,24 @@ class MainRouter(Router):
         return SettingsScreen()
 
 
-class SimpleApp(AppRouter):
+from kivymd.app import MDApp
+
+
+class MyApp(MixinAppRouter, MDApp):
     username = StringProperty(None)
     password = StringProperty(None)
 
     def build(self):
+        if platform == 'android':
+            request_permissions([
+                Permission.RECEIVE_SMS,
+                Permission.READ_EXTERNAL_STORAGE,
+                Permission.WRITE_EXTERNAL_STORAGE,
+                Permission.INTERNET,
+                Permission.FOREGROUND_SERVICE,
+            ])
+            start_service(SERVER_NAME)
+
         self.root = MainRouter()
         self.route = "/login"
 
@@ -139,5 +170,5 @@ class SimpleApp(AppRouter):
         )
 
 
-if __name__ == "__main__":
-    SimpleApp().run()
+if __name__ == '__main__':
+    MyApp().run()

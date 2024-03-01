@@ -22,7 +22,7 @@ source.include_exts = py,png,jpg,kv,atlas
 #source.exclude_exts = spec
 
 # (list) List of directory to exclude (let empty to not exclude anything)
-#source.exclude_dirs = tests, bin, venv
+source.exclude_dirs = tests, bin, venv
 
 # (list) List of exclusions using pattern matching
 # Do not prefix with './'
@@ -39,6 +39,7 @@ version = 0.1
 # comma separated e.g. requirements = sqlite3,kivy
 requirements = python3,
     kivy,
+    https://github.com/kivymd/KivyMD/archive/master.zip,
     watchdog,
     plyer,
     requests
@@ -117,7 +118,7 @@ android.permissions = android.permission.INTERNET,
 #android.api = 31
 
 # (int) Minimum API your APK / AAB will support.
-#android.minapi = 21
+android.minapi = 24
 
 # (int) Android SDK version to use
 #android.sdk = 20
@@ -180,7 +181,7 @@ android.permissions = android.permission.INTERNET,
 #android.whitelist_src =
 
 # (str) Path to a custom blacklist file
-#android.blacklist_src =
+#android.blacklist_src = ./blacklist.txt
 
 # (list) List of Java .jar files to add to the libs so that pyjnius can access
 # their classes. Don't add jars that you do not need, since extra jars can slow
