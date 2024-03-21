@@ -1,12 +1,13 @@
 from android.broadcast import BroadcastReceiver
 from jnius import autoclass
+from typing import Callable, Any
 
 mActivity = autoclass('org.kivy.android.PythonActivity').mActivity
 SmsIntents = autoclass("android.provider.Telephony$Sms$Intents")
 
 
 class ImcomingSmsReceiver(BroadcastReceiver):
-    def __init__(self, callback):
+    def __init__(self, callback: Callable[[dict[str, Any]], None]):
         super().__init__(
             lambda context, intent: callback(self.on_receive(context, intent)),  # noqa
             actions=[SmsIntents.SMS_RECEIVED_ACTION]

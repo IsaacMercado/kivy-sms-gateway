@@ -39,7 +39,7 @@ version = 0.1
 # comma separated e.g. requirements = sqlite3,kivy
 requirements = python3,
     kivy,
-    https://github.com/kivymd/KivyMD/archive/master.zip,
+    kivymd==1.2.0,
     watchdog,
     plyer,
     requests
