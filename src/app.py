@@ -1,3 +1,4 @@
+from aiohttp.client_exceptions import ClientConnectorError
 from src.models.error import ApiError
 import asyncio
 import os
@@ -6,7 +7,7 @@ from aiohttp import ClientSession
 from kivy import platform
 from kivy.app import App
 from kivy.lang import Builder
-from kivy.properties import StringProperty
+from kivy.properties import StringProperty, ObjectProperty
 from kivy.uix.screenmanager import Screen
 from kivymd.app import MDApp
 from kivymd.uix.button import MDFlatButton
@@ -102,11 +103,7 @@ Builder.load_string("""
             text: 'Connexion'
             font_size: 24
             on_press: root.do_login(login.text, password.text)
-                    
-        MDRectangleFlatButton:
-            text: 'Connexion'
-            font_size: 24
-            on_press: root.show_alert_dialog("Hola")
+
 """)
 
 
@@ -128,12 +125,32 @@ class LoginScreen(Screen):
         try:
             async with ClientSession() as session:
                 token = await fetch_token(session, login_text, password_text)
+
             set_route("/")
+
         except ApiError as error:
             if error.non_field:
                 self.show_alert_dialog("\n".join(error.non_field))
-            if error.fields:
-                print(error.fields)
+
+            input_maps = {
+                "email": self.ids.login,
+                "password": self.ids.password,
+            }
+
+            for key, widget in input_maps.items():
+                value = error.fields.get(key)
+
+                if value:
+                    widget.helper_text_mode = "on_error"
+                    widget.helper_text = "\n".join(value)
+                    widget.error = True
+                else:
+                    widget.helper_text_mode = "on_focus"
+                    widget.helper_text = ""
+                    widget.error = False
+
+        except ClientConnectorError as error:
+            self.show_alert_dialog("No hay conexión a internet")
 
     def show_alert_dialog(self, content):
         if not self.dialog:
@@ -180,6 +197,8 @@ class MainRouter(Router):
 
 
 class MyApp(MixinAppRouter, MDApp):
+    storage = ObjectProperty()
+
     def build(self):
         if platform == 'android':
             request_permissions([

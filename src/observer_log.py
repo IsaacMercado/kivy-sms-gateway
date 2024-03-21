@@ -1,10 +1,11 @@
 import logging
 from datetime import datetime
 
-from kivy import platform
 from watchdog.events import RegexMatchingEventHandler
-from watchdog.observers import Observer, BaseObserverSubclassCallable
+from watchdog.observers import BaseObserverSubclassCallable, Observer
 from watchdog.observers.inotify_buffer import logger as inotify_logger
+
+from src.utils.path import get_app_path
 
 inotify_logger.setLevel(logging.WARNING)
 
@@ -18,13 +19,7 @@ class CustomEventHandler(RegexMatchingEventHandler):
 
 
 def run_observer():
-    if platform == 'android':
-        from android.storage import app_storage_path
-        settings_path = app_storage_path()
-    else:
-        from plyer import storagepath
-        settings_path = storagepath.get_application_dir()
-
+    settings_path = get_app_path()
     event_handler = CustomEventHandler(regexes=[r'.*service\.log$'])
     observer = Observer()
     observer.schedule(event_handler, settings_path)
