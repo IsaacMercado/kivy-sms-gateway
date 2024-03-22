@@ -1,13 +1,47 @@
+from datetime import datetime
+from typing import Any, Callable
+
 from android.broadcast import BroadcastReceiver
 from jnius import autoclass
-from typing import Callable, Any
 
 mActivity = autoclass('org.kivy.android.PythonActivity').mActivity
 SmsIntents = autoclass("android.provider.Telephony$Sms$Intents")
 
 
+class SmsMessage:
+    def __init__(
+        self,
+        address: str,
+        subject: str,
+        body: str,
+        timestamp: int,
+        service_center_address: int | None = None
+    ):
+        self.address = address
+        self.subject = subject
+        self.body = body
+        self.timestamp = timestamp
+        self.service_center_address = service_center_address
+
+    @property
+    def date(self):
+        if not hasattr(self, '_date'):
+            self._date = datetime.fromtimestamp(self.timestamp / 1000)
+        return self._date
+
+    @classmethod
+    def from_android_instance(cls, instance: Any):
+        return cls(
+            address=instance.getOriginatingAddress(),
+            subject=instance.getPseudoSubject(),
+            body=instance.getMessageBody(),
+            timestamp=instance.getTimestampMillis(),
+            service_center_address=instance.getServiceCenterAddress()
+        )
+
+
 class ImcomingSmsReceiver(BroadcastReceiver):
-    def __init__(self, callback: Callable[[dict[str, Any]], None]):
+    def __init__(self, callback: Callable[[list[SmsMessage]], None]):
         super().__init__(
             lambda context, intent: callback(self.on_receive(context, intent)),  # noqa
             actions=[SmsIntents.SMS_RECEIVED_ACTION]
@@ -15,26 +49,7 @@ class ImcomingSmsReceiver(BroadcastReceiver):
 
     def on_receive(self, context, intent):
         return [
-            {
-                'display_message_body': message.getDisplayMessageBody(),
-                'display_originating_address': message.getDisplayOriginatingAddress(),
-                'email_body': message.getEmailBody(),
-                'email_from': message.getEmailFrom(),
-                'index_on_icc': message.getIndexOnIcc(),
-                'message_body': message.getMessageBody(),
-                'originating_address': message.getOriginatingAddress(),
-                'protocol_identifier': message.getProtocolIdentifier(),
-                'pseudo_subject': message.getPseudoSubject(),
-                'service_center_address': message.getServiceCenterAddress(),
-                'status': message.getStatus(),
-                'status_on_icc': message.getStatusOnIcc(),
-                'timestamp_millis': message.getTimestampMillis(),
-                'is_email': message.isEmail(),
-                'is_mwi_clear_message': message.isMWIClearMessage(),
-                'is_mwi_set_message': message.isMWISetMessage(),
-                'is_mwi_dont_store': message.isMwiDontStore(),
-                'is_replace': message.isReplace(),
-                'is_reply_path_present': message.isReplyPathPresent(),
-                'is_status_report_message': message.isStatusReportMessage()
-            } for message in SmsIntents.getMessagesFromIntent(intent)
+            SmsMessage.from_android_instance(message)
+            for message in SmsIntents.getMessagesFromIntent(intent)
+            if not message.isEmail()
         ]

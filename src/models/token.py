@@ -20,7 +20,7 @@ class Token:
             refresh_token=json["refresh_token"]
         )
 
-    def to_preferences(self, storage: Storage) -> None:
+    def to_storage(self, storage: Storage) -> None:
         storage.set_string(self.access_tag, self.access_token)
         storage.set_string(self.refresh_tag, self.refresh_token)
 

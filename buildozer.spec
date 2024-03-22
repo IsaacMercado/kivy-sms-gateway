@@ -60,7 +60,7 @@ orientation = portrait
 
 # (list) List of service to declare
 #services = NAME:ENTRYPOINT_TO_PY,NAME2:ENTRYPOINT2_TO_PY
-services = myservice:services/myservice.py:foreground:sticky
+services = myservice:src/services/android/background.py:foreground:sticky
 
 #
 # OSX Specific

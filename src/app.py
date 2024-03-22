@@ -1,28 +1,27 @@
-from aiohttp.client_exceptions import ClientConnectorError
-from src.models.error import ApiError
 import asyncio
-import os
 
-from aiohttp import ClientSession
 from kivy import platform
 from kivy.app import App
 from kivy.lang import Builder
-from kivy.properties import StringProperty, ObjectProperty
+from kivy.properties import ObjectProperty
 from kivy.uix.screenmanager import Screen
 from kivymd.app import MDApp
 from kivymd.uix.button import MDFlatButton
 from kivymd.uix.dialog import MDDialog
 from kivymd.utils import asynckivy as ak
+from requests.exceptions import ConnectionError
 
+from src.models.error import ApiError
 from src.services.login import fetch_token
 from src.utils.router import MixinAppRouter, Router, route
+from src.storages.core import CoreStorage
+
+SERVER_NAME = 'Myservice'
 
 if platform == 'android':
     from android.permissions import Permission, request_permissions
 
     from src.services.register import start_service, stop_service
-
-    SERVER_NAME = 'Myservice'
 
 
 Builder.load_string("""
@@ -123,11 +122,9 @@ class LoginScreen(Screen):
 
     async def _do_login(self, login_text, password_text):
         try:
-            async with ClientSession() as session:
-                token = await fetch_token(session, login_text, password_text)
-
+            token = await fetch_token(login_text, password_text)
+            token.to_storage(App.get_running_app().storage)
             set_route("/")
-
         except ApiError as error:
             if error.non_field:
                 self.show_alert_dialog("\n".join(error.non_field))
@@ -149,7 +146,7 @@ class LoginScreen(Screen):
                     widget.helper_text = ""
                     widget.error = False
 
-        except ClientConnectorError as error:
+        except ConnectionError as error:
             self.show_alert_dialog("No hay conexión a internet")
 
     def show_alert_dialog(self, content):
@@ -200,6 +197,8 @@ class MyApp(MixinAppRouter, MDApp):
     storage = ObjectProperty()
 
     def build(self):
+        self.storage = CoreStorage()
+
         if platform == 'android':
             request_permissions([
                 Permission.RECEIVE_SMS,
