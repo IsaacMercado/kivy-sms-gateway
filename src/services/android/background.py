@@ -2,7 +2,6 @@ import asyncio
 from os import environ
 from time import sleep
 
-import requests
 from android.storage import app_storage_path
 
 from src.models.token import Token
@@ -23,19 +22,20 @@ async def send_all_sms(messages: list[SmsMessage], storage: Storage):
 
 
 def on_sms_received(messages: list[SmsMessage]):
-    asyncio.run(send_all_sms(messages))
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(send_all_sms(messages))
 
 
 def loop():
     print('Python service started with argument:', argument)
 
-    ImcomingSmsReceiver(on_sms_received).start()
-    settings_path = app_storage_path()
+    # ImcomingSmsReceiver(on_sms_received).start()
+    # settings_path = app_storage_path()
 
     while True:
         print('Python service is running...')
-        with open(f'{settings_path}/service.log', 'a') as f:
-            f.write('Python service is running...\n')
+        # with open(f'{settings_path}/service.log', 'a') as f:
+        #     f.write('Python service is running...\n')
         sleep(10.)
 
 

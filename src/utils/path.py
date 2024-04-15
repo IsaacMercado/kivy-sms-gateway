@@ -1,3 +1,6 @@
+from kivy.utils import platform
+
+
 def get_app_path():
     if platform == 'android':
         from android.storage import app_storage_path

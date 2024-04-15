@@ -172,7 +172,12 @@ class MenuScreen(Screen):
         print('The button is being pressed!')
 
         if platform == 'android':
-            stop_service(SERVER_NAME)
+            # stop_service(SERVER_NAME)
+            from plyer import notification
+            notification.notify(
+                title='Hello world',
+                message='Hello world',
+            )
 
 
 class SettingsScreen(Screen):
