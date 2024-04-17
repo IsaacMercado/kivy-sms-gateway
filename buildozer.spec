@@ -109,7 +109,8 @@ android.permissions = android.permission.INTERNET,
     android.permission.FOREGROUND_SERVICE,
     android.permission.FOREGROUND_SERVICE_REMOTE_MESSAGING,
     android.permission.READ_EXTERNAL_STORAGE,
-    android.permission.WRITE_EXTERNAL_STORAGE
+    android.permission.WRITE_EXTERNAL_STORAGE,
+    android.permission.POST_NOTIFICATIONS
 
 # (list) features (adds uses-feature -tags to manifest)
 #android.features = android.hardware.usb.host

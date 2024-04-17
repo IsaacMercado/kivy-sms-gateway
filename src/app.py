@@ -173,11 +173,8 @@ class MenuScreen(Screen):
 
         if platform == 'android':
             # stop_service(SERVER_NAME)
-            from plyer import notification
-            notification.notify(
-                title='Hello world',
-                message='Hello world',
-            )
+            from src.utils.android.notification import show_notification
+            show_notification()
 
 
 class SettingsScreen(Screen):
@@ -211,6 +208,7 @@ class MyApp(MixinAppRouter, MDApp):
                 Permission.WRITE_EXTERNAL_STORAGE,
                 Permission.INTERNET,
                 Permission.FOREGROUND_SERVICE,
+                Permission.POST_NOTIFICATIONS,
             ])
             start_service(SERVER_NAME)
 

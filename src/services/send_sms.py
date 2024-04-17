@@ -9,9 +9,9 @@ from src.storages import Storage
 from src.utils.async_requests import http_post
 
 re_sms_bank = re.compile(
-    r'^[A-za-z ]+Bs\. {0,5}(?<amount>(\d+\.){0,1}\d+,\d+) del '
-    r'(?<phone_number>\d{4}-\d{7}) Ref: (?<number>\d+) en '
-    r'fecha:{0,1} (?<date>\d{2}-\d{2}-\d{2}) hora: (?<hour>\d{2}:\d{2}).*$'
+    r'^[A-za-z ]+Bs\. {0,5}(?:<amount>(\d+\.){0,1}\d+,\d+) del '
+    r'(?:<phone_number>\d{4}-\d{7}) Ref: (?:<number>\d+) en '
+    r'fecha:{0,1} (?:<date>\d{2}-\d{2}-\d{2}) hora: (?:<hour>\d{2}:\d{2}).*$'
 )
 
 

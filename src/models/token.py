@@ -31,7 +31,7 @@ class Token:
 
     @staticmethod
     def has_token(storage: Storage) -> bool:
-        return storage.has_refresh_token()
+        return bool(storage.get_string("refresh_token"))
 
     @classmethod
     def from_storage(cls, storage: Storage) -> "Token":
