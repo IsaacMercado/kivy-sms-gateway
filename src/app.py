@@ -12,9 +12,10 @@ from kivymd.utils import asynckivy as ak
 from requests.exceptions import ConnectionError
 
 from src.models.error import ApiError
+from src.models.token import Token
 from src.services.login import fetch_token
-from src.utils.router import MixinAppRouter, Router, route
 from src.storages.core import CoreStorage
+from src.utils.router import MixinAppRouter, Router, route
 
 SERVER_NAME = 'Myservice'
 
@@ -195,10 +196,11 @@ class MainRouter(Router):
         return SettingsScreen()
 
 
-class MyApp(MixinAppRouter, MDApp):
+class SMSGatewayApp(MixinAppRouter, MDApp):
     storage = ObjectProperty()
 
     def build(self):
+        self.theme_cls.theme_style = 'Dark'
         self.storage = CoreStorage()
 
         if platform == 'android':
@@ -213,8 +215,4 @@ class MyApp(MixinAppRouter, MDApp):
             start_service(SERVER_NAME)
 
         self.root = MainRouter()
-        self.route = "/login"
-
-
-if __name__ == '__main__':
-    MyApp().run()
+        self.route = "/" if Token.has_token(self.storage) else "/login"

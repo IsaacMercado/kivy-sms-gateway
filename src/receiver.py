@@ -20,13 +20,13 @@ class SmsMessage:
         self.address = address
         self.subject = subject
         self.body = body
-        self.timestamp = timestamp
+        self.timestamp = timestamp / 1000
         self.service_center_address = service_center_address
 
     @property
     def date(self):
         if not hasattr(self, '_date'):
-            self._date = datetime.fromtimestamp(self.timestamp / 1000)
+            self._date = datetime.fromtimestamp(self.timestamp)
         return self._date
 
     @classmethod

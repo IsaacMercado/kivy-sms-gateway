@@ -29,9 +29,9 @@ class Token:
             "Authorization": f"Bearer {self.access_token}"
         }
 
-    @staticmethod
-    def has_token(storage: Storage) -> bool:
-        return bool(storage.get_string("refresh_token"))
+    @classmethod
+    def has_token(cls, storage: Storage) -> bool:
+        return cls.refresh_tag in storage
 
     @classmethod
     def from_storage(cls, storage: Storage) -> "Token":

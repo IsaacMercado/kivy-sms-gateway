@@ -14,15 +14,15 @@ argument = environ.get('PYTHON_SERVICE_ARGUMENT', '')
 async def main():
     print('Python service started with argument:', argument)
     messages = []
-    storage = CoreStorage()
 
     ImcomingSmsReceiver(messages.append).start()
     # settings_path = app_storage_path()
 
     while True:
-        if not messages or Token.has_token(storage):
+        storage = CoreStorage()
+
+        if not messages or not Token.has_token(storage):
             await asyncio.sleep(1.)
-            # print('Python service is running...')
             continue
 
         # with open(f'{settings_path}/service.log', 'a') as f:
@@ -34,7 +34,7 @@ async def main():
                 send_sms_data(
                     message,
                     refresh_token=token.refresh_token,
-                ) for message in messages
+                ) for message in messages.pop(0)
             ])
         except IndexError:
             continue

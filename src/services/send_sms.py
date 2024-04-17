@@ -9,9 +9,9 @@ from src.storages import Storage
 from src.utils.async_requests import http_post
 
 re_sms_bank = re.compile(
-    r'^[A-za-z ]+Bs\. {0,5}(?:<amount>(\d+\.){0,1}\d+,\d+) del '
-    r'(?:<phone_number>\d{4}-\d{7}) Ref: (?:<number>\d+) en '
-    r'fecha:{0,1} (?:<date>\d{2}-\d{2}-\d{2}) hora: (?:<hour>\d{2}:\d{2}).*$'
+    r'^[A-za-z ]+Bs\. {0,5}(?P<amount>(\d+\.){0,1}\d+,\d+) del '
+    r'(?P<phone_number>\d{4}-\d{7}) Ref: (?P<number>\d+) en '
+    r'fecha:{0,1} (?P<date>\d{2}-\d{2}-\d{2}) hora: (?P<hour>\d{2}:\d{2}).*$'
 )
 
 
@@ -24,12 +24,11 @@ async def send_sms_data(
     match_sms = re_sms_bank.match(message.body)
 
     if match_sms:
-        named_group = match_sms.groupdict()
-        phone_number = named_group.get("phoneNumber")
-        amount = named_group.get("amount")
-        date = named_group.get("date")
-        hour = named_group.get("hour")
-        number = named_group.get("number")
+        phone_number = match_sms.group("phone_number")
+        amount = match_sms.group("amount")
+        date = match_sms.group("date")
+        hour = match_sms.group("hour")
+        number = match_sms.group("number")
 
         try:
             token = await fetch_refresh_token(
@@ -38,18 +37,19 @@ async def send_sms_data(
             )
         except ApiError as error:
             print(error)
+            return
 
         response = await http_post(
             urljoin(HOST, "/api/v1/deposits/mobile_payment/from_sms/"),
             headers=token.get_headers(),
             json={
                 'address': message.address,
-                'timestamp': message.date,
+                'timestamp': int(message.timestamp),
                 'datetime': f"{date} {hour}",
                 'amount': amount,
                 'phone_number': phone_number,
                 'number': number[-10:],
-                'subject': message.subject,
+                'subject': message.subject or None,
                 'serviceCenterAddress': message.service_center_address,
             },
         )

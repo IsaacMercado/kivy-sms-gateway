@@ -1,6 +1,5 @@
 from urllib.parse import urljoin
 
-
 from src.constants import HOST
 from src.models.error import ApiError
 from src.models.token import Token
@@ -17,7 +16,7 @@ async def fetch_refresh_token(refresh_token: str | None = None, storage: Storage
 
     response = await http_post(
         urljoin(HOST, "/paseto_auth/token/refresh/"),
-        headers={"Authorization": f"Bearer {refresh_token}"},
+        json={"refresh_token": refresh_token}
     )
     data = response.json()
 

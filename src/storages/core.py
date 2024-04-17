@@ -13,6 +13,9 @@ class CoreStorage(Storage):
             'custom_storage.pickle',
         ))
 
+    def __contains__(self, key: str) -> bool:
+        return self._storage.exists(key)
+
     def set_string(self, key: str, value: str) -> None:
         self._storage.put(key, value=value)
 
