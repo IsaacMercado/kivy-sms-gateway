@@ -58,52 +58,52 @@ Builder.load_string("""
             text: "Settings"
 
 <LoginScreen>:
-    MDBoxLayout:
-        id: login_layout
+    MDCard:
+        size_hint: None, None
+        size: 300, 400
+        pos_hint: {"center_x": 0.5, "center_y": 0.5}
+        elevation: 10
+        padding: 25
+        spacing: 25
         orientation: 'vertical'
-        padding: [10, 50, 10, 50]
-        spacing: 50
 
         MDLabel:
-            text: 'SIAC SMS Gateway'
-            font_size: 32
+            id: welcome_label
+            text: "SIAC SMS Gateway"
+            font_size: 40
+            haling: 'center'
+            size_hint_y: None
+            height: self.texture_size[1]
+            padinng_y: 15
 
-        MDBoxLayout:
-            orientation: 'vertical'
+        MDTextField:
+            id: user
+            hint_text: 'username'
+            icon_right: 'account'
+            size_hint_x: None
+            width: 200
+            font_size: 18
+            pos_hint: {'center_x': 0.5}
 
-            MDLabel:
-                text: 'Email'
-                font_size: 18
-                halign: 'left'
-                text_size: root.width-20, 20
+        MDTextField:
+            id: password
+            hint_text: 'password'
+            icon_right: 'eye-off'
+            size_hint_x: None
+            width: 200
+            font_size: 18
+            pos_hint: {'center_x': 0.5}
+            password: True
 
-            MDTextField:
-                id: login
-                mode: "fill"
-                multiline: False
-                font_size: 28
+        MDRoundFlatButton:
+            text: 'LOG IN'
+            font_size: 12
+            pos_hint: {'center_x': 0.5}
+            on_press: root.do_login(user.text, password.text)
 
-        MDBoxLayout:
-            orientation: 'vertical'
-
-            MDLabel:
-                text: 'Contraseña'
-                halign: 'left'
-                font_size: 18
-                text_size: root.width-20, 20
-
-            MDTextField:
-                id: password
-                mode: "fill"
-                multiline: False
-                password: True
-                font_size: 28
-
-        MDRectangleFlatButton:
-            text: 'Connexion'
-            font_size: 24
-            on_press: root.do_login(login.text, password.text)
-
+        Widget:
+            size_hint_y: None
+            height: 10
 """)
 
 
