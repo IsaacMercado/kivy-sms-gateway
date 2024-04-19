@@ -21,3 +21,6 @@ class CoreStorage(Storage):
 
     def get_string(self, key: str) -> str:
         return self._storage.get(key).get("value")
+
+    def clear(self) -> None:
+        self._storage.clear()

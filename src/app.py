@@ -26,63 +26,31 @@ if platform == 'android':
 
 
 Builder.load_string("""
-<MenuScreen>:
-    MDBoxLayout:
-        orientation: 'vertical'
-
-        MDLabel:
-            text: "You are now connected"
-            font_size: 32
-
-        MDRectangleFlatButton:
-            text: "Hello world"
-            font_size: 24
-            on_press: root.callback(self)
-
-        MDRectangleFlatButton:
-            text: "Disconnect"
-            font_size: 24
-            on_press: app.route = "/login"
-
-<SettingsScreen>:
-    MDBoxLayout:
-        orientation: "vertical"
-
-        MDRectangleFlatButton:
-            text: "Back"
-            on_release: app.history_back()
-            size_hint_y: None
-            height: "48dp"
-
-        MDLabel:
-            text: "Settings"
-
 <LoginScreen>:
     MDCard:
         size_hint: None, None
-        size: 300, 400
+        size: 650, 900
         pos_hint: {"center_x": 0.5, "center_y": 0.5}
         elevation: 10
-        padding: 25
-        spacing: 25
+        padding: dp(10)
+        spacing: dp(10)
         orientation: 'vertical'
 
         MDLabel:
             id: welcome_label
             text: "SIAC SMS Gateway"
-            font_size: 40
+            font_size: 70
             haling: 'center'
             size_hint_y: None
             height: self.texture_size[1]
-            padinng_y: 15
+            padinng_y: 25
 
         MDTextField:
-            id: user
-            hint_text: 'username'
+            id: email
+            hint_text: 'email'
             icon_right: 'account'
             size_hint_x: None
-            width: 200
-            font_size: 18
+            width: 450
             pos_hint: {'center_x': 0.5}
 
         MDTextField:
@@ -90,20 +58,46 @@ Builder.load_string("""
             hint_text: 'password'
             icon_right: 'eye-off'
             size_hint_x: None
-            width: 200
-            font_size: 18
+            width: 450
             pos_hint: {'center_x': 0.5}
             password: True
 
+        Widget:
+            size_hint_y: None
+            height: 20
+
         MDRoundFlatButton:
             text: 'LOG IN'
-            font_size: 12
             pos_hint: {'center_x': 0.5}
-            on_press: root.do_login(user.text, password.text)
+            on_press: root.do_login(email.text, password.text)
 
         Widget:
             size_hint_y: None
-            height: 10
+            height: 20
+
+<MainScreen>:
+    MDCard:
+        size_hint: None, None
+        size: 650, 900
+        pos_hint: {"center_x": 0.5, "center_y": 0.5}
+        elevation: 10
+        padding: dp(10)
+        spacing: dp(10)
+        orientation: 'vertical'
+
+        MDLabel:
+            text: "You are now connected"
+            adaptive_size: True
+            color: "grey"
+            pos: "12dp", "12dp"
+            bold: True
+            pos_hint: {'center_x': 0.5}
+
+        MDRoundFlatButton:
+            text: "Logout"
+            pos_hint: {'center_x': 0.5}
+            on_press: root.logout()
+
 """)
 
 
@@ -119,6 +113,7 @@ class LoginScreen(Screen):
     dialog = None
 
     def do_login(self, login_text, password_text):
+        print(login_text, password_text)
         asyncio.ensure_future(self._do_login(login_text, password_text))
 
     async def _do_login(self, login_text, password_text):
@@ -131,7 +126,7 @@ class LoginScreen(Screen):
                 self.show_alert_dialog("\n".join(error.non_field))
 
             input_maps = {
-                "email": self.ids.login,
+                "email": self.ids.email,
                 "password": self.ids.password,
             }
 
@@ -168,7 +163,7 @@ class LoginScreen(Screen):
             self.dialog.dismiss()
 
 
-class MenuScreen(Screen):
+class MainScreen(Screen):
     def callback(self, instance):
         print('The button is being pressed!')
 
@@ -177,23 +172,20 @@ class MenuScreen(Screen):
             from src.utils.android.notification import show_notification
             show_notification()
 
-
-class SettingsScreen(Screen):
-    pass
+    def logout(self):
+        storage = App.get_running_app().storage
+        storage.clear()
+        set_route("/login")
 
 
 class MainRouter(Router):
     @route("/")
     def index(self):
-        return MenuScreen()
+        return MainScreen()
 
     @route("/login")
     def about(self):
         return LoginScreen()
-
-    @route("/settings")
-    def settings(self):
-        return SettingsScreen()
 
 
 class SMSGatewayApp(MixinAppRouter, MDApp):
