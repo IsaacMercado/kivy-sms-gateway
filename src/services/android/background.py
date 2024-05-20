@@ -1,13 +1,13 @@
 import asyncio
 from os import environ
 
-from android.storage import app_storage_path
 from jnius import autoclass
 
 from src.models.token import Token
 from src.receiver import ImcomingSmsReceiver
 from src.services.send_sms import send_sms_data
 from src.storages.core import CoreStorage
+from src.utils.logger import logger
 
 
 async def main():
@@ -15,11 +15,10 @@ async def main():
     PythonService.mService.setAutoRestartService(True)
     argument = environ.get('PYTHON_SERVICE_ARGUMENT', '')
 
-    print('Python service started with argument:', argument)
+    await asyncio.to_thread(logger.info, 'Python service started with argument: %s', argument)
     messages = []
 
     ImcomingSmsReceiver(messages.append).start()
-    # settings_path = app_storage_path()
 
     while True:
         storage = CoreStorage()
@@ -29,13 +28,11 @@ async def main():
             await asyncio.sleep(1.)
             continue
 
-        # with open(f'{settings_path}/service.log', 'a') as f:
-        #     f.write('Python service is running...\n')
-
-        print("Sending messages...")
+        await asyncio.to_thread(logger.info, "Sending messages...")
 
         try:
             token = Token.from_storage(storage)
+
             await asyncio.gather(*[
                 send_sms_data(
                     message,

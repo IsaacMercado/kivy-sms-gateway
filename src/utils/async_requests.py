@@ -1,20 +1,6 @@
-import asyncio
-from functools import partial
-
 import requests
 
+from src.utils import sync_to_async
 
-async def http_get(*args, **kwargs):
-    loop = asyncio.get_event_loop()
-    future = loop.run_in_executor(
-        None, partial(requests.get, *args, **kwargs))
-    response = await future
-    return response
-
-
-async def http_post(*args, **kwargs):
-    loop = asyncio.get_event_loop()
-    future = loop.run_in_executor(
-        None, partial(requests.post, *args, **kwargs))
-    response = await future
-    return response
+http_get = sync_to_async(requests.get)
+http_post = sync_to_async(requests.post)

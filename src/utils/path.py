@@ -1,7 +1,7 @@
 from kivy.utils import platform
 
 
-def get_app_path():
+def get_app_path() -> str:
     if platform == 'android':
         from android.storage import app_storage_path
         settings_path = app_storage_path()

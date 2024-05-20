@@ -1,3 +1,4 @@
+import asyncio
 import re
 from urllib.parse import urljoin
 
@@ -7,6 +8,7 @@ from src.receiver import SmsMessage
 from src.services.refresh_token import fetch_refresh_token
 from src.storages import Storage
 from src.utils.async_requests import http_post
+from src.utils.logger import logger
 
 re_sms_bank = re.compile(
     r'^[A-za-z ]+Bs\. {0,5}(?P<amount>(\d+\.){0,1}\d+,\d+) del '
@@ -56,9 +58,11 @@ async def send_sms_data(
         data = response.json()
 
         if response.status_code in {200, 201, 400, 401}:
+            await asyncio.to_thread(logger.info, "SMS data sent. Status code: %s", response.status_code)
             return data
 
+        await asyncio.to_thread(logger.error, "Error sending SMS data")
         raise ApiError(response.status_code, data)
 
     else:
-        print("No match found for message")
+        await asyncio.to_thread(logger.warning, "No match found for message")
