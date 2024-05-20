@@ -1,14 +1,21 @@
+from typing import Callable
 from urllib.parse import urljoin
+
+import requests
 
 from src.constants import HOST
 from src.models.error import ApiError
 from src.models.token import Token
-from src.utils.async_requests import http_post
 from src.utils.logger import logger
 
 
-async def fetch_token(email: str, password: str):
-    response = await http_post(
+def fetch_token(
+    email: str,
+    password: str,
+    on_success: Callable[[Token], None],
+    on_error: Callable[[ApiError], None],
+):
+    response = requests.post(
         urljoin(HOST, "/paseto_auth/token/"),
         json={
             "email": email,
@@ -20,7 +27,10 @@ async def fetch_token(email: str, password: str):
 
     if response.status_code == 200:
         logger.info("Token received")
-        return Token.from_json(data)
+        token = Token.from_json(data)
+        on_success(token)
+        return
 
     logger.error("Error token received")
-    raise ApiError(response.status_code, data)
+    exception = ApiError(response.status_code, data)
+    on_error(exception)

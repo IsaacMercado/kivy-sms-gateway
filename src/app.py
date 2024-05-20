@@ -1,11 +1,12 @@
-import asyncio
 from datetime import datetime
+from threading import Thread
 
 from kivy import platform
 from kivy.app import App
-from kivy.clock import Clock
+from kivy.clock import Clock, mainthread
 from kivy.lang import Builder
-from kivy.properties import BooleanProperty, ListProperty, ObjectProperty, StringProperty
+from kivy.properties import (BooleanProperty, ListProperty, ObjectProperty,
+                             StringProperty)
 from kivy.uix.screenmanager import Screen
 from kivymd.app import MDApp
 from kivymd.uix.button import MDFlatButton
@@ -126,36 +127,46 @@ class LoginScreen(Screen):
     dialog = None
 
     def do_login(self, login_text, password_text):
-        asyncio.ensure_future(self._do_login(login_text, password_text))
+        thread = Thread(
+            target=fetch_token,
+            args=(
+                login_text,
+                password_text,
+                self.on_success_login,
+                self.on_error_login,
+            )
+        )
+        thread.start()
 
-    async def _do_login(self, login_text, password_text):
-        try:
-            token = await fetch_token(login_text, password_text)
-            token.to_storage(App.get_running_app().storage)
-            set_route("/")
-        except ApiError as error:
-            if error.non_field:
-                self.show_alert_dialog("\n".join(error.non_field))
+    @mainthread
+    def on_success_login(self, token: Token):
+        token.to_storage(App.get_running_app().storage)
+        set_route("/")
 
-            input_maps = {
-                "email": self.ids.email,
-                "password": self.ids.password,
-            }
+        # except ConnectionError as error:
+        #     self.show_alert_dialog("No hay conexión a internet")
 
-            for key, widget in input_maps.items():
-                value = error.fields.get(key)
+    @mainthread
+    def on_error_login(self, error: ApiError):
+        if error.non_field:
+            self.show_alert_dialog("\n".join(error.non_field))
 
-                if value:
-                    widget.helper_text_mode = "on_error"
-                    widget.helper_text = "\n".join(value)
-                    widget.error = True
-                else:
-                    widget.helper_text_mode = "on_focus"
-                    widget.helper_text = ""
-                    widget.error = False
+        input_maps = {
+            "email": self.ids.email,
+            "password": self.ids.password,
+        }
 
-        except ConnectionError as error:
-            self.show_alert_dialog("No hay conexión a internet")
+        for key, widget in input_maps.items():
+            value = error.fields.get(key)
+
+            if value:
+                widget.helper_text_mode = "on_error"
+                widget.helper_text = "\n".join(value)
+                widget.error = True
+            else:
+                widget.helper_text_mode = "on_focus"
+                widget.helper_text = ""
+                widget.error = False
 
     def show_alert_dialog(self, content):
         if not self.dialog:
@@ -194,13 +205,14 @@ class MainScreen(Screen):
     is_running = BooleanProperty(False)
     logs: LogObserver | None = ObjectProperty()
 
-    def on_pre_enter(self, *args):
+    def init_logs(self):
         if self.logs:
-            self.logs.update()
-        else:
-            self.logs = LogObserver(self.on_logs_added)
-
+            self.logs.stop()
+        self.logs = LogObserver(self.on_logs_added)
         self.logs.start()
+
+    def on_pre_enter(self, *args):
+        self.init_logs()
 
     def on_logs_added(self, logs):
         self.data.extend([
@@ -236,6 +248,7 @@ class MainScreen(Screen):
     def clear(self):
         self.data.clear()
         self.logs.clear()
+        self.init_logs()
 
 
 class MainRouter(Router):
