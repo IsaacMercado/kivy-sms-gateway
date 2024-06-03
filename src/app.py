@@ -1,5 +1,6 @@
+import threading
 from datetime import datetime
-from threading import Thread
+from typing import Callable
 
 from kivy import platform
 from kivy.app import App
@@ -27,6 +28,30 @@ if platform == 'android':
     from android.permissions import Permission, request_permissions
 
     from src.services.register import start_service, stop_service
+
+
+class ThreadExceptHook:
+    def __init__(self) -> None:
+        self.__callbacks = {}
+
+    def __call__(self, args: threading.ExceptHookArgs):
+        name = args.thread.getName()
+        actions = self.__callbacks.get(name)
+        if actions:
+            action = actions.get(args.exc_type)
+            if action:
+                action(args.exc_value)
+                return
+        threading.__excepthook__(args)
+
+    def add_callback(self, name: str, exception: type[Exception], action: Callable[[Exception], None]):
+        if name not in self.__callbacks:
+            self.__callbacks[name] = {}
+        self.__callbacks[name][exception] = action
+
+
+threading.excepthook = ThreadExceptHook()
+
 
 Builder.load_string("""
 <LogListItem>:
@@ -126,9 +151,17 @@ def back_route():
 class LoginScreen(Screen):
     dialog = None
 
+    def on_pre_enter(self, *args):
+        threading.excepthook.add_callback(
+            "login_screen_fetch_token",
+            ConnectionError,
+            self.on_error_thread,
+        )
+
     def do_login(self, login_text, password_text):
-        thread = Thread(
+        thread = threading.Thread(
             target=fetch_token,
+            name="login_screen_fetch_token",
             args=(
                 login_text,
                 password_text,
@@ -143,8 +176,9 @@ class LoginScreen(Screen):
         token.to_storage(App.get_running_app().storage)
         set_route("/")
 
-        # except ConnectionError as error:
-        #     self.show_alert_dialog("No hay conexión a internet")
+    @mainthread
+    def on_error_thread(self, exception: ConnectionError):
+        self.show_alert_dialog("No hay conexión a internet")
 
     @mainthread
     def on_error_login(self, error: ApiError):
