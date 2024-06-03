@@ -1,1 +1,1 @@
-HOST = "http://localhost:8089"
+HOST = "https://central.vendeygana.net"
